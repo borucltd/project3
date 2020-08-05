@@ -1,0 +1,10 @@
+.delete-btn {
+    background-color: darkorange;
+    position: absolute;
+    color: black;
+    top:0;
+    right:0;
+    cursor: grab;
+    border-radius: 5px;
+  }
+  

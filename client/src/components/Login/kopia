@@ -1,0 +1,152 @@
+import React, { useRef, useState } from "react";
+import API from "../../utils/API";
+import Validator from "validator";
+import passwordValidator from "password-validator";
+
+
+function Login () {
+
+    const [state, setState] = useState({
+        emai: "",
+        password: "",
+        buttonDisabled: true
+    })
+    
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const [buttonState, setButtonState] = useState(true);
+    const [emailState, setEmailState] = useState("nook");
+    const [passwordState, setPasswordState] = useState("nook");
+
+    const [passwordErrors, setPasswordErrors] = useState([]);
+
+    const refEmail = useRef();
+    const refPassword = useRef();
+ 
+
+    const passwordSchema =  new passwordValidator();
+    passwordSchema
+        .is().min(8)
+        .is().max(32)
+        .has().uppercase() 
+        .has().lowercase() 
+        .has().digits()                                
+        .has().not().spaces() 
+
+    function handleSubmit(event) {
+        
+        event.preventDefault()
+        const userData = {
+            email,
+            password
+        }
+
+        API.login(userData)
+           .then(res => {console.log(res)})
+           .catch(err => {console.log(err.response)})
+    }
+
+    function handleEmailChange(event) {
+        if(!Validator.isEmail(event.target.value)) {
+            
+            refEmail.current.style.backgroundColor = "orange";
+        
+        } else {
+            
+            refEmail.current.style.backgroundColor =  "#ADFF2F";
+            setEmail(event.target.value)
+            setEmailState("ok")
+        
+            if (passwordState === "ok") {
+                setButtonState("");
+            }
+            
+        }
+    }
+     
+    function handlePasswordChange(event) {
+        
+        const passwordErrors = passwordSchema.validate(event.target.value, {list: true})
+        setPasswordErrors(passwordErrors)
+
+        if(passwordErrors.length === 0) {
+                    
+            refPassword.current.style.backgroundColor =  "#ADFF2F";
+            setPassword(event.target.value)
+            setPasswordState("ok")
+        
+            if (emailState === "ok") {
+                setButtonState("");
+            }
+
+        } else {
+            refPassword.current.style.backgroundColor = "orange";
+
+        }
+    }
+
+    function renderSwitch(param) {
+           
+        switch(param.error) {
+            case 'min':
+                return 'minimum 8 characters';
+            case 'max':
+                return 'maximum 32 characters';
+            case 'lowercase':
+                return 'use lowercase';
+            case 'uppercase':
+                return 'use uppercase';
+            case 'digits':
+                return 'use digits';
+            default:
+                return 'OK';
+        }
+      }
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <h3>Enter your credentials</h3>
+
+            <div className="form-group">
+                <label>Email address</label>
+                <input 
+                    type="email" 
+                    name="email" 
+                    ref={refEmail} 
+                    onChange={handleEmailChange} 
+                    className="form-control" 
+                    placeholder="Enter email" 
+                    required
+                />
+            </div>
+
+            <div className="form-group">
+                <label>Password</label>
+                <input 
+                    type="password" 
+                    name="password" 
+                    ref={refPassword} 
+                    onChange={handlePasswordChange} 
+                    className="form-control" 
+                    placeholder="Enter password"  
+                    min
+                    maxLength="32"
+                    required
+                />
+                
+                <ul>
+                {passwordErrors.map((error,index) => (
+                    <li key={index}>{renderSwitch({error})}</li>
+                ))}
+                </ul>
+                
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-block" disabled={buttonDisabled}>Submit</button>
+        </form>
+    );
+    
+}
+
+export default Login;
